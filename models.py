@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import List
 from sqlalchemy import (
     Column,
     Integer,
@@ -25,8 +26,14 @@ class Post(databases.Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
     content = Column(String, index=True)
-    owner_id = Column(Integer, ForeignKey("users.id"))
+    owner_email = Column(String, ForeignKey("users.email"))
     date_created = Column(DateTime, default=datetime.utcnow())
     date_last_update = Column(DateTime, default=datetime.utcnow())
 
     owner = orm.relationship("User", back_populates="posts")
+
+class Token(databases.Base):
+    __tablename__ = "token"
+    id = Column(Integer, primary_key=True, index=True)
+    access_token = Column(String)
+    token_type = Column(String)

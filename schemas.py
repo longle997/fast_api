@@ -13,7 +13,7 @@ class PostCreate(PostBase):
 
 class Post(PostBase):
     id: int
-    owner_id: int
+    owner_email: str
     date_created: datetime
     date_last_update: datetime
 
