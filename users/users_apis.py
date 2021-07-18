@@ -11,7 +11,7 @@ from schemas import(
     User,
     UserCreated,
 )
-from helper import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, oauth2_scheme, get_current_user, CREDENTIAL_EXCEPTION
+from helper import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, get_current_user, CREDENTIAL_EXCEPTION
 from models import User as User_db
 from . import users_services
 

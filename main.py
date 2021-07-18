@@ -4,7 +4,7 @@ import services
 import time
 from starlette.requests import Request
 
-from users import users_apis
+from users import users_apis, send_email_apis
 from posts import posts_apis
 
 # Initialize app
@@ -16,6 +16,8 @@ services.create_db()
 # include routers
 app.include_router(users_apis.router)
 app.include_router(posts_apis.router)
+app.include_router(send_email_apis.router)
+
 
 # @app.post("/users/", response_model=User)
 # def create_user(
