@@ -32,8 +32,3 @@ class Post(databases.Base):
 
     owner = orm.relationship("User", back_populates="posts")
 
-class Token(databases.Base):
-    __tablename__ = "token"
-    id = Column(Integer, primary_key=True, index=True)
-    access_token = Column(String)
-    token_type = Column(String)

@@ -11,7 +11,7 @@ import services
 # initialize authication
 # The oauth2_scheme variable is an instance of OAuth2PasswordBearer, but it is also a "callable".
 # So, it can be used with Depends.
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/token")
 
 SECRET_KEY = "0cd0a267e9d2c1e6c46f66cb7468eaf117052763531f9ac45a10989968f6ee9f"
 ALGORITHM = "HS256"
