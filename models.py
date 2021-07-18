@@ -9,7 +9,7 @@ from sqlalchemy import (
 )
 from sqlalchemy import orm
 from sqlalchemy.sql.schema import ForeignKey
-import databases
+from . import databases
 
 class User(databases.Base):
     __tablename__ = "users"

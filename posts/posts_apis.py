@@ -1,15 +1,15 @@
 # We will run this file by uvicorn
-import services
+from .. import services
 from typing import List
 
 from fastapi import Depends, HTTPException, APIRouter
 
 from sqlalchemy import orm
-from schemas import(
+from ..schemas import(
     Post,
     PostCreate
 )
-from users import users_services
+from ..users import users_services
 from . import posts_services
 
 # Initialize app

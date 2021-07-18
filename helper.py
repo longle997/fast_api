@@ -6,7 +6,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm.session import Session
 from jose import JWTError, jwt
 
-import services
+from . import services
 
 # initialize authication
 # The oauth2_scheme variable is an instance of OAuth2PasswordBearer, but it is also a "callable".

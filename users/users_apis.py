@@ -1,5 +1,5 @@
 # We will run this file by uvicorn
-import services
+from .. import services
 from typing import List
 from datetime import timedelta
 
@@ -7,12 +7,12 @@ from fastapi import Depends, HTTPException, APIRouter
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import orm
 
-from schemas import(
+from ..schemas import(
     User,
     UserCreated,
 )
-from helper import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, get_current_user, CREDENTIAL_EXCEPTION
-from models import User as User_db
+from ..helper import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, get_current_user, CREDENTIAL_EXCEPTION
+from ..models import User as User_db
 from . import users_services
 
 # Initialize app

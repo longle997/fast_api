@@ -1,8 +1,8 @@
 from sqlalchemy.sql.expression import select
 from sqlalchemy.orm import Session
 
-from models import Post
-from schemas import PostCreate
+from ..models import Post
+from ..schemas import PostCreate
 
 
 def create_post(db: Session, user_email: str, post: PostCreate):

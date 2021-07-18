@@ -7,7 +7,7 @@ router = APIRouter(
     prefix="/send-email",
     tags=["send-email api"],
     # dependencies=[Depends(oauth2_scheme)],
-    responses={404: {"description": "User not found"}}
+    responses={404: {"description": "User not found"}},
 )
 
 @router.get('/send-email/asynchronous/{user_email}')
