@@ -1,4 +1,4 @@
-from . import databases
+from blog_api import databases
 
 from passlib.context import CryptContext
 

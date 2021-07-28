@@ -1,5 +1,5 @@
 from fastapi import APIRouter, BackgroundTasks
-from .send_email_services import send_email_async, send_email_background
+from blog_api.users.send_email_services import send_email_async, send_email_background
 from fastapi import Response, status
 
 # Initialize app

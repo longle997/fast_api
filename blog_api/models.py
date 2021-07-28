@@ -9,9 +9,9 @@ from sqlalchemy import (
 )
 from sqlalchemy import orm
 from sqlalchemy.sql.schema import ForeignKey
-from . import databases
+from blog_api.databases import Base
 
-class User(databases.Base):
+class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True)
@@ -21,7 +21,7 @@ class User(databases.Base):
     # with this relationship, we can refer post from user and vice versa
     posts = orm.relationship("Post", back_populates="owner")
 
-class Post(databases.Base):
+class Post(Base):
     __tablename__ = "posts"
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)

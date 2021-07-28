@@ -1,11 +1,13 @@
 # We will run this file by uvicorn
 import fastapi
-from . import services
 import time
+import sys
+
+from blog_api.services import create_db
 from starlette.requests import Request
 
-from .users import users_apis, send_email_apis
-from .posts import posts_apis
+from blog_api.users import users_apis, send_email_apis
+from blog_api.posts import posts_apis
 
 # Initialize app
 app = fastapi.FastAPI(
@@ -14,7 +16,7 @@ app = fastapi.FastAPI(
 )
 
 # Initialize DB
-services.create_db()
+create_db()
 
 # include routers
 app.include_router(users_apis.router)

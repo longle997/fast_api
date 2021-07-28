@@ -3,12 +3,8 @@ import sqlalchemy.ext.declarative as _declarative
 import sqlalchemy.orm as _orm
 
 # specify where is your DB
-SQLACHEMY_DATABASE_URL = "postgresql://postgres:password@localhost/test"
+SQLACHEMY_DATABASE_URL = "postgresql://postgres:password@localhost:5432/test"
 
-# you just telling where is your DB
-# engine = sqlalchemy.create_engine(
-#     SQLACHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-# )
 engine = sqlalchemy.create_engine(
     SQLACHEMY_DATABASE_URL
 )

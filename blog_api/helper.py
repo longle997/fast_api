@@ -6,8 +6,8 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm.session import Session
 from jose import JWTError, jwt
 
-from . import services
-
+from .services import get_db
+from .users.users_services import get_single_user
 # initialize authication
 # The oauth2_scheme variable is an instance of OAuth2PasswordBearer, but it is also a "callable".
 # So, it can be used with Depends.
@@ -23,7 +23,7 @@ CREDENTIAL_EXCEPTION = HTTPException(
     headers={"WWW-Authenticate": "Bearer"},
 )
 
-async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(services.get_db)):
+async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
@@ -31,7 +31,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
         if not user_name:
             raise CREDENTIAL_EXCEPTION
 
-        user = services.get_single_user(db, user_name)
+        user = get_single_user(db, user_name)
         if not user:
             raise CREDENTIAL_EXCEPTION
 

@@ -1,16 +1,16 @@
 # We will run this file by uvicorn
-from .. import services
+from blog_api import services
 from typing import List
 
 from fastapi import Depends, HTTPException, APIRouter
 
 from sqlalchemy import orm
-from ..schemas import(
+from blog_api.schemas import(
     Post,
     PostCreate
 )
-from ..users import users_services
-from . import posts_services
+from blog_api.users import users_services
+from blog_api.posts import posts_services
 
 # Initialize app
 router = APIRouter(
