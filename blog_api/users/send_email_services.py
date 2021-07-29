@@ -42,8 +42,6 @@ async def send_email_async(subject: str, email_to: str, body: dict):
     )
 
     fm = FastMail(conf)
-    
-    time.sleep(60)
 
     await fm.send_message(message, template_name='email.html')
 

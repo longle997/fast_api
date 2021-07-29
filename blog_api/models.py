@@ -16,7 +16,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
-    is_active = Column(Boolean, default=True)
+    is_active = Column(Boolean, default=False)
 
     # with this relationship, we can refer post from user and vice versa
     posts = orm.relationship("Post", back_populates="owner")

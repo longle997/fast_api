@@ -3,7 +3,7 @@ from blog_api import services
 from typing import List
 from datetime import timedelta
 
-from fastapi import Depends, HTTPException, APIRouter
+from fastapi import Depends, HTTPException, APIRouter, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import orm
 
@@ -26,7 +26,9 @@ router = APIRouter(
 
 @router.post("/", response_model=User)
 def create_user(
-    user:UserCreated, db:orm.Session = Depends(services.get_db)
+    background_task: BackgroundTasks,
+    user:UserCreated,
+    db:orm.Session = Depends(services.get_db)
 ):
     user_check = users_services.get_single_user(db, user.email)
 
@@ -35,7 +37,7 @@ def create_user(
             status_code=400, detail="User with this infomation is already exist!"
         )
     
-    return users_services.create_user(db, user)
+    return users_services.create_user(db, user, background_task)
 
 
 @router.get("/", response_model=List[User])
@@ -71,3 +73,20 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     )
 
     return {"access_token": access_token, "token_type": "bearer"}
+
+@router.post("{user_email}/active/{verify_code}")
+def active_user(user_email: str, verify_code: int, db: orm.Session = Depends(services.get_db)):
+    user_check = users_services.get_single_user(db, user_email)
+    if not user_check:
+        raise HTTPException(
+            status_code=400, detail="User with this infomation does not exist!"
+        )
+    
+    active_check = users_services.active_user(user_email, verify_code, db)
+
+    if active_check == True:
+        return f"User with email= {user_email} is activated!"
+    else:
+        raise HTTPException(
+            status_code=400, detail="Verify code is incorrect!"
+        )

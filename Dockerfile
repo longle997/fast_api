@@ -9,7 +9,3 @@ WORKDIR /blog_api_container/
 RUN pip install -r blog_api/requirements.txt
 
 ENV PYTHONPATH=`pwd`
-
-# ENTRYPOINT alembic upgrade head
-
-# ENTRYPOINT uvicorn blog_api.main:app --port 8000 --host 0.0.0.0 --reload
