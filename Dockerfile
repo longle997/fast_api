@@ -2,14 +2,14 @@ FROM python:3
 
 RUN apt-get update && apt-get -y install python3-pip
 
-COPY /blog_api /blog_api
+COPY . /blog_api_container
 
-WORKDIR /blog_api
+WORKDIR /blog_api_container/
 
-RUN pip install -r requirements.txt
+RUN pip install -r blog_api/requirements.txt
 
 ENV PYTHONPATH=`pwd`
 
-ENTRYPOINT uvicorn main:app --port 8000 --host 0.0.0.0 --reload
+# ENTRYPOINT alembic upgrade head
 
-# CMD uvicorn blog_api.main:app --port 8000 --reload
+# ENTRYPOINT uvicorn blog_api.main:app --port 8000 --host 0.0.0.0 --reload

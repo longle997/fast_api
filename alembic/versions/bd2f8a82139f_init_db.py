@@ -10,7 +10,6 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy import orm
 from sqlalchemy.sql.schema import Column, ForeignKey
-from models import User, Post
 
 
 # revision identifiers, used by Alembic.
