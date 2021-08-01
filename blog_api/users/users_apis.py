@@ -6,6 +6,7 @@ from datetime import timedelta
 from fastapi import Depends, HTTPException, APIRouter, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import orm
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from blog_api.schemas import(
     User,
@@ -25,30 +26,30 @@ router = APIRouter(
 
 
 @router.post("/", response_model=User)
-def create_user(
+async def create_user(
     background_task: BackgroundTasks,
     user:UserCreated,
-    db:orm.Session = Depends(services.get_db)
+    db:AsyncSession = Depends(services.get_db)
 ):
-    user_check = users_services.get_single_user(db, user.email)
+    user_check = await users_services.get_single_user(db, user.email)
 
     if user_check:
         raise HTTPException(
             status_code=400, detail="User with this infomation is already exist!"
         )
     
-    return users_services.create_user(db, user, background_task)
+    return await users_services.create_user(db, user, background_task)
 
 
 @router.get("/", response_model=List[User])
-def get_all_user(db:orm.Session = Depends(services.get_db)):
-    data = users_services.get_all_user(db)
+async def get_all_user(db:AsyncSession = Depends(services.get_db)):
+    data = await users_services.get_all_user(db)
     return data
 
 
 @router.get("/{user_email}/", response_model=User)
-def get_single_user(user_email:str, db:orm.Session = Depends(services.get_db)):
-    return users_services.get_single_user(db, user_email)
+async def get_single_user(user_email:str, db:AsyncSession = Depends(services.get_db)):
+    return await users_services.get_single_user(db, user_email)
 
 
 @router.get("/me")
@@ -60,8 +61,8 @@ async def read_user_me(current_user: User_db = Depends(get_current_user)):
 # access token is contain expire time
 # We only need to create an access token with correct format, jwt tool will handle the rest for us
 @router.post("/token")
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: orm.Session = Depends(services.get_db)):
-    user = users_services.authenticate_user(form_data.username, form_data.password, db)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(services.get_db)):
+    user = await users_services.authenticate_user(form_data.username, form_data.password, db)
     if not user:
         raise CREDENTIAL_EXCEPTION
 
@@ -75,14 +76,14 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("{user_email}/active/{verify_code}")
-def active_user(user_email: str, verify_code: int, db: orm.Session = Depends(services.get_db)):
-    user_check = users_services.get_single_user(db, user_email)
+async def active_user(user_email: str, verify_code: int, db: AsyncSession = Depends(services.get_db)):
+    user_check = await users_services.get_single_user(db, user_email)
     if not user_check:
         raise HTTPException(
             status_code=400, detail="User with this infomation does not exist!"
         )
     
-    active_check = users_services.active_user(user_email, verify_code, db)
+    active_check = await users_services.active_user(user_email, verify_code, db)
 
     if active_check == True:
         return f"User with email= {user_email} is activated!"

@@ -35,11 +35,8 @@ def upgrade():
         sa.Column('date_created', sa.DateTime, default=datetime.now()),
         sa.Column('date_last_update', sa.DateTime, default=datetime.now()),
     )
-    op.add_column('users',
-        Column('post_id', sa.Integer, ForeignKey('posts.id'))
-    )
     op.add_column('posts',
-        Column('owner_id', sa.Integer, ForeignKey('users.id')),
+        sa.Column('owner_email', sa.String, ForeignKey('users.email'))
     )
 
 

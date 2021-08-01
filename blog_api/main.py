@@ -1,10 +1,8 @@
 # We will run this file by uvicorn
 import fastapi
-import time
-import sys
+import asyncio
 
 from blog_api.services import create_db
-from starlette.requests import Request
 
 from blog_api.users import users_apis, send_email_apis
 from blog_api.posts import posts_apis
@@ -16,7 +14,7 @@ app = fastapi.FastAPI(
 )
 
 # Initialize DB
-create_db()
+# asyncio.run(create_db())
 
 # include routers
 app.include_router(users_apis.router)
@@ -25,13 +23,13 @@ app.include_router(send_email_apis.router)
 
 # test add middleware to (app / all functions)
 # this middleware will receive request before target_function
-@app.middleware("http")
-async def add_process_time_to_header(request: Request, target_function):
-    start_time = time.time()
-    # pass that request to target_function
-    response = await target_function(request)
-    # receive response and edit it
-    process_time = time.time() - start_time
-    response.headers['X-Process-Time'] = str(process_time)
-    # return/send to client
-    return response
+# @app.middleware("http")
+# async def add_process_time_to_header(request: Request, target_function):
+#     start_time = time.time()
+#     # pass that request to target_function
+#     response = await target_function(request)
+#     # receive response and edit it
+#     process_time = time.time() - start_time
+#     response.headers['X-Process-Time'] = str(process_time)
+#     # return/send to client
+#     return response
