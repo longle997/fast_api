@@ -31,4 +31,3 @@ class Post(Base):
     date_last_update = Column(DateTime, default=datetime.utcnow())
 
     owner = orm.relationship("User", back_populates="posts")
-    # owner = orm.relationship("User", backref=orm.backref("users", lazy="selectin"))

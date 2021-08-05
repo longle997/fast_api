@@ -1,6 +1,7 @@
-from pydantic import BaseModel
-from typing import List
+from pydantic import BaseModel, Field
+from typing import List, Optional
 from datetime import datetime
+from pydantic.class_validators import validator
 
 from sqlalchemy.sql.sqltypes import Boolean
 
@@ -31,9 +32,18 @@ class UserCreated(UserBase):
     password: str
 
 class User(UserBase):
-    id: int
-    is_active: bool
-    posts: List[Post]
+    id: Optional[int] = Field(
+        None,
+        title="ID of User",
+    )
+    is_active: Optional[bool] = Field(
+        None,
+        title="Actice status of User",
+    )
+    posts: Optional[List[Post]] = Field(
+        None,
+        title="Posts belong to User",
+    )
 
     class Config:
         # Pydantic's orm_mode will tell the Pydantic model to read the data even if it is not a dict, but an ORM model (or any other arbitrary object with attributes).

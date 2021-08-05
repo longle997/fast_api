@@ -8,12 +8,14 @@ from jose import JWTError, jwt
 
 from .services import get_db
 from .users.users_services import get_single_user
+from .users.send_email_services import Envs
+from fastapi.templating import Jinja2Templates
 # initialize authication
 # The oauth2_scheme variable is an instance of OAuth2PasswordBearer, but it is also a "callable".
 # So, it can be used with Depends.
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/token")
 
-SECRET_KEY = "0cd0a267e9d2c1e6c46f66cb7468eaf117052763531f9ac45a10989968f6ee9f"
+SECRET_KEY = Envs.SECRET_KEY
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -23,15 +25,16 @@ CREDENTIAL_EXCEPTION = HTTPException(
     headers={"WWW-Authenticate": "Bearer"},
 )
 
-async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+templates = Jinja2Templates(directory="blog_api/static/templates")
 
+async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
         user_name : str = payload.get("sub")
         if not user_name:
             raise CREDENTIAL_EXCEPTION
 
-        user = get_single_user(db, user_name)
+        user = await get_single_user(db, user_name)
         if not user:
             raise CREDENTIAL_EXCEPTION
 

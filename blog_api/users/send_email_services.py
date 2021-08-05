@@ -14,6 +14,8 @@ class Envs:
     MAIL_PORT = os.getenv('MAIL_PORT')
     MAIL_SERVER = os.getenv('MAIL_SERVER')
     MAIL_FROM_NAME = os.getenv('MAIL_FROM_NAME')
+    SECRET_KEY = os.getenv('SECRET_KEY')
+
 
 # to be able to use this feature, you'll need to
 # allow less secure apps on your gmail account
@@ -29,7 +31,7 @@ conf = ConnectionConfig(
     MAIL_TLS=True,
     MAIL_SSL=False,
     USE_CREDENTIALS=True,
-    TEMPLATE_FOLDER='blog_api/templates'
+    TEMPLATE_FOLDER='blog_api/static/templates'
 )
 
 async def send_email_async(subject: str, email_to: str, body: dict):
@@ -43,7 +45,7 @@ async def send_email_async(subject: str, email_to: str, body: dict):
 
     fm = FastMail(conf)
 
-    await fm.send_message(message, template_name='email.html')
+    await fm.send_message(message, template_name='active_account_email.html')
 
 
 def send_email_background(backgound_tasks: BackgroundTasks, subject: str, email_to: str, body: dict):
@@ -56,6 +58,11 @@ def send_email_background(backgound_tasks: BackgroundTasks, subject: str, email_
 
     fm = FastMail(conf)
 
+    if body["code"]:
+        template_name = 'email.html'
+    else:
+        template_name = 'forgot_pass_email.html'
+
     backgound_tasks.add_task(
-        fm.send_message, message, template_name='email.html'
+        fm.send_message, message, template_name=template_name
     )

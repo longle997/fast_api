@@ -5,14 +5,14 @@ from datetime import timedelta
 
 from fastapi import Depends, HTTPException, APIRouter, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy import orm
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from blog_api.schemas import(
     User,
     UserCreated,
 )
-from blog_api.helper import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, get_current_user, CREDENTIAL_EXCEPTION
+from blog_api.helper import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, get_current_user, CREDENTIAL_EXCEPTION, templates
 from blog_api.models import User as User_db
 from blog_api.users import users_services
 
@@ -23,7 +23,6 @@ router = APIRouter(
     # dependencies=[Depends(oauth2_scheme)],
     responses={404: {"description": "User not found"}}
 )
-
 
 @router.post("/", response_model=User)
 async def create_user(
@@ -60,7 +59,7 @@ async def read_user_me(current_user: User_db = Depends(get_current_user)):
 # we are using OAuth2PasswordBearer, token form is {"access_token": access_token, "token_type": "bearer"}
 # access token is contain expire time
 # We only need to create an access token with correct format, jwt tool will handle the rest for us
-@router.post("/token")
+@router.post("/login")
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(services.get_db)):
     user = await users_services.authenticate_user(form_data.username, form_data.password, db)
     if not user:
@@ -75,7 +74,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 
     return {"access_token": access_token, "token_type": "bearer"}
 
-@router.post("{user_email}/active/{verify_code}")
+@router.post("/{user_email}/active/{verify_code}")
 async def active_user(user_email: str, verify_code: int, db: AsyncSession = Depends(services.get_db)):
     user_check = await users_services.get_single_user(db, user_email)
     if not user_check:
@@ -90,4 +89,38 @@ async def active_user(user_email: str, verify_code: int, db: AsyncSession = Depe
     else:
         raise HTTPException(
             status_code=400, detail="Verify code is incorrect!"
+        )
+
+@router.post("/changepass")
+async def change_user_password(password: str, confirm_password: str, db: AsyncSession = Depends(services.get_db), current_user: User_db = Depends(get_current_user)):
+    if password != confirm_password:
+        raise HTTPException(
+            status_code=400, detail=f"Confirm password is incorrect, please type it again!"
+        )
+
+    status = await users_services.change_user_password(password, db, current_user)
+
+    if status:
+        return f"User with email {current_user.email} changed password successfully!"
+    else:
+        raise HTTPException(
+            status_code=400, detail=f"Unable to change password for user with email {current_user.email}!"
+        )
+
+@router.post("/{user_email}/forgotpass")
+async def forgot_user_password(background_task: BackgroundTasks, user_email: str, db: AsyncSession = Depends(services.get_db)):
+    user_check = await users_services.get_single_user(db, user_email)
+
+    if not user_check:
+        raise HTTPException(
+            status_code=400, detail="User with this infomation does not exist!"
+        )
+    
+    status = await users_services.forgot_password(user_email, db, background_task)
+
+    if status:
+        return f"New password was sent to email {user_email}, please use that new password to login. Remember to change your password after login."
+    else:
+        raise HTTPException(
+            status_code=400, detail=f"Fail to send new password to email {user_email}"
         )
