@@ -4,7 +4,7 @@ import sqlalchemy.orm as _orm
 
 # specify where is your DB
 # The example assumes Python 3.9 and SQLAlchemy 1.4. Other dependencies include FastAPI with uvicorn, asyncpg (PostgreSQL database client for Python's asyncio)
-SQLACHEMY_DATABASE_URL = "postgresql+asyncpg://postgres:password@localhost/test"
+SQLACHEMY_DATABASE_URL = "postgresql+asyncpg://postgres:password@db/test"
 # in case run without docker
 # SQLACHEMY_DATABASE_URL = "postgresql+asyncpg://postgres:password@localhost/test"
 
