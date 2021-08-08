@@ -8,12 +8,12 @@
   <div class="sticky">
     <h1>OnLineShop</h1></div>
   <ul class="headbar">
-    <li><a href="/">Home</a></li>
+    <li><a href="/home">Home</a></li>
     <li><a href="/signup">Create New Account</a></li>
     {% if signedin %}
       <li><a href="/logout">Logout</a></li>
     {% else %}
-      <li><a href="/login">Login</a></li>
+      <li><a href="users/login">Login</a></li>
     {% endif %}
   </ul>
   {% if signedin %}

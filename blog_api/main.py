@@ -1,13 +1,14 @@
 # We will run this file by uvicorn
 import fastapi
 from fastapi import Request
+from fastapi.param_functions import Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 
-from blog_api.services import create_db
+from blog_api.models import User
 from blog_api.users import users_apis, send_email_apis
 from blog_api.posts import posts_apis
-from blog_api.helper import templates
+from blog_api.helper import get_current_user, templates, oauth2_scheme
 
 # Initialize app
 app = fastapi.FastAPI(
@@ -27,8 +28,14 @@ app.include_router(send_email_apis.router)
 
 # HOME page
 @app.get("/home", response_class=HTMLResponse)
-async def test_template(request: Request):
-    return templates.TemplateResponse("home.html", {"request": request, "signedin": True, "name": "Long Le", "type":"admin"})
+async def test_template(request: Request, current_user: User = Depends(get_current_user)):
+    signed_in = False
+
+    if current_user:
+        signed_in = True
+        return templates.TemplateResponse("home.html", {"request": request, "signedin": signed_in, "name": current_user.email, "type":"Customer"})
+    else:
+        return templates.TemplateResponse("home.html", {"request": request, "signedin": signed_in})
 
 '''
 # test add middleware to (app / all functions)

@@ -1,8 +1,22 @@
-from sqlalchemy.sql.expression import select
+from datetime import datetime
+from sqlalchemy.engine import create
+from sqlalchemy.sql.expression import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
-from blog_api.models import Post
+from blog_api.models import Post, Link_User_Post
 from blog_api.schemas import PostCreate
+
+
+async def __validate_like(user_id: int, post_id: int, db: AsyncSession):
+    stmt = (
+        select(Link_User_Post)
+        .where(Link_User_Post.user_id == user_id)
+        .where(Link_User_Post.post_id == post_id)
+    )
+    q = await db.execute(stmt)
+    # with scalar() you return result of None
+    return q.scalar()
 
 
 async def create_post(db: AsyncSession, user_email: str, post: PostCreate):
@@ -16,7 +30,7 @@ async def create_post(db: AsyncSession, user_email: str, post: PostCreate):
     return db_post
 
 
-async def get_all_posts(db: AsyncSession, user_email: str):
+async def get_all_posts_from_one_user(db: AsyncSession, user_email: str):
     # old style of SQLAchemy(<1.4)
     # return db.query(Post).filter(Post.owner_email == user_email).all()
 
@@ -26,9 +40,75 @@ async def get_all_posts(db: AsyncSession, user_email: str):
     records = records.scalars().all()
     return records
 
+async def get_all_posts(db: AsyncSession):
+    # old style of SQLAchemy(<1.4)
+    # return db.query(Post).filter(Post.owner_email == user_email).all()
 
-async def get_post_single(db: AsyncSession, user_email: str, post_id: int):
-    stmt = select(Post).filter(Post.owner_email == user_email, Post.id == post_id)
+    # new style of SQLAchemy(>=1.4)
+    stmt = select(Post)
+    records = await db.execute(stmt)
+    records = records.scalars().all()
+    return records
+
+
+async def get_post_single(db: AsyncSession, post_id: int):
+    stmt = select(Post).filter(Post.id == post_id).options(selectinload(Post.like))
     q = await db.execute(stmt)
     record = q.scalar()
     return record
+
+async def update_post(post_id: int, post_data: PostCreate, db: AsyncSession):
+    if not (patch_data := post_data.dict(exclude_unset=True)):
+        raise ValueError("No changes submitted.")
+    post: Post = await get_post_single(db, post_id)
+
+    if post_data.title:
+        post.title = post_data.title
+    
+    if post_data.content:
+        post.content = post_data.content
+    
+    post.date_last_update = datetime.now()
+    
+    await db.commit()
+
+    return post
+
+async def delete_post(post_id: int, db: AsyncSession):
+    stmt = (
+        delete(Post)
+        .where(Post.id == post_id)
+    )
+    await db.execute(stmt)
+    await db.commit()
+
+    return True
+
+async def create_post_like(user_id: int, post_id: int, db: AsyncSession):
+    like_check = await __validate_like(user_id, post_id, db)
+    if like_check:
+        stmt = (
+            delete(Link_User_Post)
+            .where(Link_User_Post.user_id == user_id)
+            .where(Link_User_Post.post_id == post_id)
+        )
+        await db.execute(stmt)
+        await db.commit()
+        return False
+
+    like = Link_User_Post(user_id = user_id, post_id = post_id)
+    db.add(like)
+    await db.commit()
+
+    return True
+
+# async def get_post_like(post_id: int, db: AsyncSession):
+#     stmt = (
+#         select(Post)
+#         .where(Post.id == post_id)
+#     ).options(selectinload(Post.like))
+
+#     q = await db.execute(stmt)
+#     record: Post = q.scalar()
+
+#     return record.like

@@ -1,18 +1,19 @@
 # We will run this file by uvicorn
+from starlette.requests import Request
 from blog_api import services
 from typing import List
 from datetime import timedelta
 
-from fastapi import Depends, HTTPException, APIRouter, BackgroundTasks
+from fastapi import Depends, HTTPException, APIRouter, BackgroundTasks, Form
 from fastapi.security import OAuth2PasswordRequestForm
-
+from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from blog_api.schemas import(
     User,
     UserCreated,
 )
-from blog_api.helper import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, get_current_user, CREDENTIAL_EXCEPTION, templates
+from blog_api.helper import ACCESS_TOKEN_EXPIRE_DAYS, create_access_token, get_current_user, CREDENTIAL_EXCEPTION, templates
 from blog_api.models import User as User_db
 from blog_api.users import users_services
 
@@ -48,25 +49,33 @@ async def get_all_user(db:AsyncSession = Depends(services.get_db)):
 
 @router.get("/{user_email}/", response_model=User)
 async def get_single_user(user_email:str, db:AsyncSession = Depends(services.get_db)):
-    return await users_services.get_single_user(db, user_email)
+    record = await users_services.get_single_user(db, user_email)
+
+    return record
 
 
+'''
 @router.get("/me")
 async def read_user_me(current_user: User_db = Depends(get_current_user)):
+    if not current_user:
+        raise CREDENTIAL_EXCEPTION
     return current_user
-
+'''
 
 # we are using OAuth2PasswordBearer, token form is {"access_token": access_token, "token_type": "bearer"}
 # access token is contain expire time
 # We only need to create an access token with correct format, jwt tool will handle the rest for us
 @router.post("/login")
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(services.get_db)):
+async def login_for_access_token(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: AsyncSession = Depends(services.get_db),
+):
     user = await users_services.authenticate_user(form_data.username, form_data.password, db)
     if not user:
         raise CREDENTIAL_EXCEPTION
 
-    access_token_expire = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
+    access_token_expire = timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
+    access_token = await create_access_token(
         # The important thing to have in mind is that the sub key should have a unique identifier across the entire application, and it should be a string.
         {"sub": user.email},
         access_token_expire
@@ -74,8 +83,36 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 
     return {"access_token": access_token, "token_type": "bearer"}
 
+'''
+# use this way to interact with Form data, which usually was from html file
+@router.post("/login/form")
+async def login_for_access_token(
+    email: str = Form(...),
+    password: str= Form(...),
+    db: AsyncSession = Depends(services.get_db),
+):
+    user = await users_services.authenticate_user(email, password, db)
+    if not user:
+        raise CREDENTIAL_EXCEPTION
+
+    access_token_expire = timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
+    access_token = await create_access_token(
+        # The important thing to have in mind is that the sub key should have a unique identifier across the entire application, and it should be a string.
+        {"sub": user.email},
+        access_token_expire
+    )
+
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@router.get("/login/form", response_class=HTMLResponse)
+async def login_for_access_token(
+    request: Request
+):
+    return templates.TemplateResponse("login.html", {"request": request})
+'''
+
 @router.post("/{user_email}/active/{verify_code}")
-async def active_user(user_email: str, verify_code: int, db: AsyncSession = Depends(services.get_db)):
+async def active_user(user_email: str, verify_code: str, db: AsyncSession = Depends(services.get_db)):
     user_check = await users_services.get_single_user(db, user_email)
     if not user_check:
         raise HTTPException(

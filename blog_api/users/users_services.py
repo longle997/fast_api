@@ -34,7 +34,7 @@ async def create_user(db:AsyncSession, user:UserCreated, background_task: Backgr
     await db.commit()
     random_str = _random_string()
     redis_client.set(user.email, random_str)
-    redis_client.expire(user.email, timedelta(minutes=5))
+    redis_client.expire(user.email, timedelta(minutes=60))
 
     try:
         send_email_background(
@@ -66,7 +66,7 @@ async def get_all_user(db:AsyncSession):
 
 async def get_single_user(db:AsyncSession, email:str):
     # this only create a query string
-    stmt = select(User).filter(User.email == email)
+    stmt = select(User).filter(User.email == email).options(selectinload(User.posts))
     # execute query and return the record
     record = await db.execute(stmt)
     return record.scalar()
@@ -89,8 +89,8 @@ async def authenticate_user(user_email: str, password: str, db: AsyncSession):
     
     return user
 
-async def active_user(user_email: str, verify_code: int, db: AsyncSession):
-    user_code = json.loads(redis_client.get(user_email))
+async def active_user(user_email: str, verify_code: str, db: AsyncSession):
+    user_code = redis_client.get(user_email).decode("utf-8")
 
     if user_code == verify_code:
         stmt = (
@@ -152,3 +152,11 @@ async def forgot_password(user_email: str, db: AsyncSession, background_task: Ba
         return True
     except IntegerError:
         return False
+
+async def verify_user(user_email: str, db: AsyncSession):
+    user_check = await get_single_user(db, user_email)
+
+    if not user_check:
+        raise HTTPException(
+            status_code=400, detail=f"User with id = {user_email} is not exsit!"
+        )

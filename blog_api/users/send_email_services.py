@@ -59,7 +59,7 @@ def send_email_background(backgound_tasks: BackgroundTasks, subject: str, email_
     fm = FastMail(conf)
 
     if body["code"]:
-        template_name = 'email.html'
+        template_name = 'active_account_email.html'
     else:
         template_name = 'forgot_pass_email.html'
 

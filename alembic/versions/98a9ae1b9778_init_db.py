@@ -1,19 +1,18 @@
-"""init db
+"""init_db
 
-Revision ID: bd2f8a82139f
+Revision ID: 98a9ae1b9778
 Revises: 
-Create Date: 2021-06-27 16:09:07.085439
+Create Date: 2021-08-07 17:47:19.222054
 
 """
 from datetime import datetime
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy import orm
-from sqlalchemy.sql.schema import Column, ForeignKey
+from sqlalchemy.sql.schema import ForeignKey
 
 
 # revision identifiers, used by Alembic.
-revision = 'bd2f8a82139f'
+revision = '98a9ae1b9778'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -37,6 +36,11 @@ def upgrade():
     )
     op.add_column('posts',
         sa.Column('owner_email', sa.String, ForeignKey('users.email'))
+    )
+    op.create_table(
+        'link_user_post',
+        sa.Column('user_id', sa.Integer, ForeignKey('users.id'), primary_key=True),
+        sa.Column('post_id', sa.Integer, ForeignKey('posts.id'), primary_key=True)
     )
 
 
