@@ -39,10 +39,10 @@ async def get_all_post(db: AsyncSession = Depends(services.get_db)):
     return await posts_services.get_all_posts(db)
 
 @router.get("/{user_email}/posts/")
-async def get_all_post_from_one_user(user_email: str, db: AsyncSession = Depends(services.get_db)):
+async def get_all_posts_from_one_user(user_email: str, db: AsyncSession = Depends(services.get_db)):
     await users_services.verify_user(user_email, db)
 
-    return await posts_services.get_all_post_from_one_user(db, user_email)
+    return await posts_services.get_all_posts_from_one_user(db, user_email)
 
 
 @router.get("/{post_id}", response_model=Post)
@@ -57,7 +57,7 @@ async def get_post_single(post_id: int, db: AsyncSession = Depends(services.get_
     
     return record
 
-@router.patch("/{post_id}")
+@router.patch("/{post_id}", response_model=Post)
 async def update_post(
     post_id: int,
     post_data: PostCreate,
@@ -72,8 +72,11 @@ async def update_post(
             status_code=HTTP_400_BAD_REQUEST,
             detail="you are not allow to modify this post!"
         )
+    
+    record = await posts_services.update_post(post_id, post_data, db)
+    
+    return record
 
-    return await posts_services.update_post(current_user.email, post_id, post_data, db)
 
 @router.delete("/{post_id}")
 async def delete_post(

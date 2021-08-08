@@ -60,19 +60,19 @@ async def get_post_single(db: AsyncSession, post_id: int):
 async def update_post(post_id: int, post_data: PostCreate, db: AsyncSession):
     if not (patch_data := post_data.dict(exclude_unset=True)):
         raise ValueError("No changes submitted.")
-    post: Post = await get_post_single(db, post_id)
+    post_record: Post = await db.get(Post, post_id)
 
     if post_data.title:
-        post.title = post_data.title
+        post_record.title = post_data.title
     
     if post_data.content:
-        post.content = post_data.content
-    
-    post.date_last_update = datetime.now()
-    
+        post_record.content = post_data.content
+
+    post_record.date_last_update = datetime.now()
+
     await db.commit()
 
-    return post
+    return post_record
 
 async def delete_post(post_id: int, db: AsyncSession):
     stmt = (

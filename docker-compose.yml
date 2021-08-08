@@ -9,8 +9,11 @@ services:
       - 8000:8000
     depends_on:
       - db
+      - redis
     command: bash -c "alembic upgrade head && uvicorn blog_api.main:app --host 0.0.0.0 --port 8000 --reload"
     restart: always
+    volumes:
+      - ./blog_api:/blog_api_container/blog_api/
 
   db:
     image: postgres:13-alpine
@@ -21,4 +24,14 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_DB: test
     restart: always
+
+  redis:
+    image: redis:alpine
+    ports:
+     - 6380:6379
+    volumes:
+     - $PWD/redis-data:/var/lib/redis
+    environment:
+     - REDIS_REPLICATION_MODE=master
+
 

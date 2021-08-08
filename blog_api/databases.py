@@ -14,6 +14,7 @@ async_engine = create_async_engine(
     echo=True
 )
 
+
 # you will use sessions to talk to your tables and make queries, but is the engine that is actually implementing things on your db.
 # We should disable the "expire on commit" behavior of sessions with expire_on_commit=False. This is because in async settings, we don't want SQLAlchemy to issue new SQL queries to the database when accessing already commited objects.
 async_session_local = _orm.sessionmaker(

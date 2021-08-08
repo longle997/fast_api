@@ -31,7 +31,7 @@ class Post(Base):
     date_created = Column(DateTime, default=datetime.utcnow())
     date_last_update = Column(DateTime, default=datetime.utcnow())
 
-    like = orm.relationship("User", secondary= 'link_user_post')
+    like = orm.relationship("User", back_populates="posts", secondary= 'link_user_post')
 
 # https://www.tutorialspoint.com/sqlalchemy/sqlalchemy_orm_many_to_many_relationships.htm
 class Link_User_Post(Base):

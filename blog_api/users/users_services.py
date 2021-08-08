@@ -18,7 +18,7 @@ from blog_api.users.send_email_services import send_email_background
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # config redis client, in order to interact with redis
-redis_client = redis.Redis(host="localhost", port=6379, db=0)
+redis_client = redis.Redis(host="redis", port=6379, db=0)
 
 def _random_string():
     letters = string.digits

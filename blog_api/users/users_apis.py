@@ -130,6 +130,9 @@ async def active_user(user_email: str, verify_code: str, db: AsyncSession = Depe
 
 @router.post("/changepass")
 async def change_user_password(password: str, confirm_password: str, db: AsyncSession = Depends(services.get_db), current_user: User_db = Depends(get_current_user)):
+    if not current_user:
+        raise CREDENTIAL_EXCEPTION
+
     if password != confirm_password:
         raise HTTPException(
             status_code=400, detail=f"Confirm password is incorrect, please type it again!"

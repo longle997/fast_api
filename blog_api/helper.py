@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta
 from typing import Optional
 from fastapi import Depends
@@ -15,6 +16,8 @@ from fastapi.templating import Jinja2Templates
 # The oauth2_scheme variable is an instance of OAuth2PasswordBearer, but it is also a "callable".
 # So, it can be used with Depends.
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login", auto_error=False)
+
+logger = logging.getLogger(__name__)
 
 SECRET_KEY = Envs.SECRET_KEY
 ALGORITHM = "HS256"
