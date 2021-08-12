@@ -18,7 +18,7 @@ from blog_api.users.send_email_services import send_email_background
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # config redis client, in order to interact with redis
-redis_client = redis.Redis(host="redis", port=6379, db=0)
+redis_client = redis.Redis(host="localhost", port=6379, db=0)
 
 def _random_string():
     letters = string.digits
@@ -27,7 +27,7 @@ def _random_string():
 
 async def create_user(db:AsyncSession, user:UserCreated, background_task: BackgroundTasks):
     # workaround by adding posts field to User intance, because when response model validate this instance, it will require posts field
-    db_user = User(email=user.email, hashed_password=hash_password(user.password), posts=[])
+    db_user = User(email=user.email, hashed_password=hash_password(user.password), posts=[], posts_like=[])
     # register the transactions we want it to do, but it doesn’t actually do it
     db.add(db_user)
     # commits (persists) those changes to the database. session.commit() always calls for session.flush() as part of it
@@ -58,7 +58,8 @@ async def create_user(db:AsyncSession, user:UserCreated, background_task: Backgr
 async def get_all_user(db:AsyncSession):
     # https://docs.sqlalchemy.org/en/14/orm/extensions/asyncio.html Preventing Implicit IO when Using AsyncSession
     # for relationship loading, eager loading should be applied.
-    stmt = select(User).options(selectinload(User.posts))
+    stmt = select(User).options(selectinload(User.posts), selectinload(User.posts_like))
+    # stmt = select(User)
     # we await session.execute() that will execute the query and hold the results. The scalars() method provides access to the results.
     record = await db.execute(stmt)
     records = record.scalars().all()
@@ -66,7 +67,8 @@ async def get_all_user(db:AsyncSession):
 
 async def get_single_user(db:AsyncSession, email:str):
     # this only create a query string
-    stmt = select(User).filter(User.email == email).options(selectinload(User.posts))
+    stmt = select(User).filter(User.email == email).options(selectinload(User.posts_like), selectinload(User.posts))
+    # stmt = select(User).filter(User.email == email)
     # execute query and return the record
     record = await db.execute(stmt)
     return record.scalar()

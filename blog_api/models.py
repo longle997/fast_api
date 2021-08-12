@@ -8,6 +8,7 @@ from sqlalchemy import (
     DateTime
 )
 from sqlalchemy import orm
+from sqlalchemy.sql.expression import select
 from sqlalchemy.sql.schema import ForeignKey
 from blog_api.databases import Base
 
@@ -18,8 +19,11 @@ class User(Base):
     hashed_password = Column(String)
     is_active = Column(Boolean, default=False)
 
-    # with this relationship, we can refer post from user and vice versa
-    posts = orm.relationship("Post", secondary= 'link_user_post')
+    # posts_like field is associated with Post model through link_user_post table
+    posts_like = orm.relationship("Post", secondary= 'link_user_post')
+    # with this relationship, we can refer post from user. SQLAchemy will find relationship between User and Post
+    # and that relationship is one to many through owner_email field
+    posts = orm.relationship("Post")
 
 class Post(Base):
     __tablename__ = "posts"
@@ -31,10 +35,28 @@ class Post(Base):
     date_created = Column(DateTime, default=datetime.utcnow())
     date_last_update = Column(DateTime, default=datetime.utcnow())
 
-    like = orm.relationship("User", back_populates="posts", secondary= 'link_user_post')
+    # like field is associated with User model through link_user_post table
+    # and back_populate mean we are explicit User instance can refer to Post instance through posts_like field
+    like = orm.relationship("User", back_populates="posts_like", secondary= 'link_user_post', lazy='selectin')
+    # use lazy='selectin' to replace selectin_in from service
+    comments = orm.relationship("Comments", lazy='selectin')
+    # comments = orm.relationship("Comments")
 
 # https://www.tutorialspoint.com/sqlalchemy/sqlalchemy_orm_many_to_many_relationships.htm
 class Link_User_Post(Base):
     __tablename__ = "link_user_post"
     user_id = Column(Integer, ForeignKey("users.id"), primary_key= True)
     post_id = Column(Integer, ForeignKey("posts.id"), primary_key= True)
+
+class Comments(Base):
+    __tablename__ = "comments"
+    id = Column(Integer, primary_key=True)
+    post = Column(Integer, ForeignKey("posts.id"))
+    name = Column(String)
+    body = Column(String)
+    date_created = Column(DateTime, default=datetime.utcnow())
+
+    # https://docs.sqlalchemy.org/en/14/orm/self_referential.html#self-referential
+    parent_id = Column(Integer, ForeignKey("comments.id"))
+    # why lazy='selectin' don't work in self reference model
+    children = orm.relationship("Comments", lazy='selectin')

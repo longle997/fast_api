@@ -1,5 +1,5 @@
 # We will run this file by uvicorn
-from typing import List
+from typing import List, Optional
 
 from fastapi import Depends, HTTPException, APIRouter
 from sqlalchemy import orm
@@ -14,7 +14,7 @@ from blog_api import services
 from blog_api.users import users_services
 from blog_api.posts import posts_services
 from blog_api.helper import CREDENTIAL_EXCEPTION, get_current_user
-from blog_api.schemas import Post
+from blog_api.schemas import Post, Comments
 
 # Initialize app
 router = APIRouter(
@@ -54,7 +54,7 @@ async def get_post_single(post_id: int, db: AsyncSession = Depends(services.get_
         raise HTTPException(
             status_code=400, detail=f"Post with id = {post_id} is not exsit!"
         )
-    
+
     return record
 
 @router.patch("/{post_id}", response_model=Post)
@@ -116,6 +116,38 @@ async def create_post_like(
         return f"User with email {current_user.email} was like post with id {post_id}!"
     else:
         return f"User with email {current_user.email} was unlike post with id {post_id}!"
+
+@router.post("/{post_id}/comment")
+async def create_post_comment(
+    post_id: int,
+    body: str,
+    parent_id: Optional[int] = None,
+    current_user: User_db = Depends(get_current_user),
+    db: AsyncSession = Depends(services.get_db)
+):
+    post_check = await posts_services.get_post_single(db, post_id)
+    if not current_user or not post_check:
+        raise CREDENTIAL_EXCEPTION
+
+    status = await posts_services.create_post_comment(current_user.email, post_id, body, parent_id, db)
+
+    if status:
+        return f"User with email {current_user.email} was comment post with id {post_id}!"
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Unable to create comment for this post"
+        )
+
+@router.get("/{post_id}/comment")
+async def get_all_comments(
+    post_id: int,
+    db: AsyncSession = Depends(services.get_db)
+):
+    record = await posts_services.get_all_comment(post_id, db)
+
+    return record
+
 
 # @router.get("/{user_email}/posts/{post_id}/like")
 # async def get_post_like(

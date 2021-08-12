@@ -22,6 +22,24 @@ class UserBase(BaseModel):
 class UserCreated(UserBase):
     password: str
 
+class CommentsBase(BaseModel):
+    id: int
+    name: str
+    body: str
+    date_created: datetime
+
+    class Config:
+        orm_mode = True
+
+class Comments(CommentsBase):
+    children: Optional[List[CommentsBase]] = Field(
+        None,
+        title="Comments",
+    )
+
+    class Config:
+        orm_mode = True
+
 class Post(PostBase):
     id: int
     owner_email: str
@@ -30,6 +48,7 @@ class Post(PostBase):
     date_created: datetime
     date_last_update: datetime
     like: List[UserBase]
+    comments: List[Comments]
 
     # change default behaviour of BaseModel
     class Config:
@@ -51,6 +70,10 @@ class User(BaseModel):
     posts: Optional[List[PostBase]] = Field(
         None,
         title="Posts belong to User",
+    )
+    posts_like: Optional[List[PostBase]] = Field(
+        None,
+        title="Posts was like by User",
     )
 
     class Config:

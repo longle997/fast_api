@@ -1,10 +1,11 @@
 from datetime import datetime
+from typing import Optional
 from sqlalchemy.engine import create
 from sqlalchemy.sql.expression import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from blog_api.models import Post, Link_User_Post
+from blog_api.models import Post, Link_User_Post, Comments
 from blog_api.schemas import PostCreate
 
 
@@ -52,9 +53,17 @@ async def get_all_posts(db: AsyncSession):
 
 
 async def get_post_single(db: AsyncSession, post_id: int):
-    stmt = select(Post).filter(Post.id == post_id).options(selectinload(Post.like))
+    stmt = select(Post).filter(Post.id == post_id)
     q = await db.execute(stmt)
-    record = q.scalar()
+    record: Post = q.scalar()
+
+    if not record:
+        return None
+
+    # Only work around Todo investigate about lazy in model
+    comments_record = await get_all_comment(post_id, db)
+    record.comments = comments_record
+
     return record
 
 async def update_post(post_id: int, post_data: PostCreate, db: AsyncSession):
@@ -101,6 +110,27 @@ async def create_post_like(user_id: int, post_id: int, db: AsyncSession):
     await db.commit()
 
     return True
+
+async def create_post_comment(user_email: str, post_id: int, body: str, parent_id: Optional[int], db: AsyncSession):
+    new_comment = Comments(
+        name = user_email,
+        post = post_id,
+        body = body,
+        parent_id = parent_id
+    )
+
+    db.add(new_comment)
+    await db.commit()
+    await db.refresh(new_comment)
+
+    return new_comment
+
+async def get_all_comment(post_id: int, db: AsyncSession):
+    stmt = select(Comments).filter(Comments.post == post_id).options(selectinload(Comments.children))
+    q = await db.execute(stmt)
+    record = q.scalars().all()
+
+    return record
 
 # async def get_post_like(post_id: int, db: AsyncSession):
 #     stmt = (
