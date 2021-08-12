@@ -4,9 +4,9 @@ import sqlalchemy.orm as _orm
 
 # specify where is your DB
 # The example assumes Python 3.9 and SQLAlchemy 1.4. Other dependencies include FastAPI with uvicorn, asyncpg (PostgreSQL database client for Python's asyncio)
-# SQLACHEMY_DATABASE_URL = "postgresql+asyncpg://postgres:password@db/test"
+SQLACHEMY_DATABASE_URL = "postgresql+asyncpg://postgres:password@db/test"
 # in case run without docker
-SQLACHEMY_DATABASE_URL = "postgresql+asyncpg://postgres:password@localhost/test"
+# SQLACHEMY_DATABASE_URL = "postgresql+asyncpg://postgres:password@localhost/test"
 
 # Specifying echo=True upon the engine initialization will enable us to see generated SQL queries in the console
 async_engine = create_async_engine(
