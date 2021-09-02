@@ -2,7 +2,7 @@
 from typing import List, Optional
 
 from fastapi import Depends, HTTPException, APIRouter
-from sqlalchemy import orm
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import HTTP_400_BAD_REQUEST
 from blog_api.schemas import(
@@ -15,6 +15,7 @@ from blog_api.users import users_services
 from blog_api.posts import posts_services
 from blog_api.helper import CREDENTIAL_EXCEPTION, get_current_user
 from blog_api.schemas import Post, Comments
+from blog_api.exceptions import ItemDoesNotExsit
 
 # Initialize app
 router = APIRouter(
@@ -30,11 +31,13 @@ async def create_post(
     current_user: User_db = Depends(get_current_user),
     db:AsyncSession = Depends(services.get_db)
 ):
+    if not current_user:
+        raise CREDENTIAL_EXCEPTION
     await users_services.verify_user(current_user.email, db)
     
     return await posts_services.create_post(db, current_user.email, post)
 
-@router.get("")
+@router.get("", response_model=List[Post])
 async def get_all_post(db: AsyncSession = Depends(services.get_db)):
     return await posts_services.get_all_posts(db)
 
@@ -51,9 +54,7 @@ async def get_post_single(post_id: int, db: AsyncSession = Depends(services.get_
     record = await posts_services.get_post_single(db, post_id)
 
     if not record:
-        raise HTTPException(
-            status_code=400, detail=f"Post with id = {post_id} is not exsit!"
-        )
+        ItemDoesNotExsit(f"Post with id = {post_id} is not exsit!")
 
     return record
 
@@ -125,11 +126,18 @@ async def create_post_comment(
     current_user: User_db = Depends(get_current_user),
     db: AsyncSession = Depends(services.get_db)
 ):
+    
     post_check = await posts_services.get_post_single(db, post_id)
-    if not current_user or not post_check:
+    if not post_check:
+        ItemDoesNotExsit(f"Post with ID {post_id} was not found!")
+
+    if not current_user:
         raise CREDENTIAL_EXCEPTION
 
-    status = await posts_services.create_post_comment(current_user.email, post_id, body, parent_id, db)
+    try:
+        status = await posts_services.create_post_comment(current_user.email, post_id, body, parent_id, db)
+    except NoResultFound:
+        ItemDoesNotExsit(f"Comment with ID {parent_id} was not found!")
 
     if status:
         return f"User with email {current_user.email} was comment post with id {post_id}!"

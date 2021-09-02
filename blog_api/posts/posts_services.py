@@ -49,6 +49,13 @@ async def get_all_posts(db: AsyncSession):
     stmt = select(Post)
     records = await db.execute(stmt)
     records = records.scalars().all()
+    if not records:
+        return None
+    # Only work around Todo investigate about lazy in model with self reference
+    for record in records:
+        comments_record = await get_all_comment(record.id, db)
+        record.comments = comments_record
+
     return records
 
 
@@ -60,7 +67,7 @@ async def get_post_single(db: AsyncSession, post_id: int):
     if not record:
         return None
 
-    # Only work around Todo investigate about lazy in model
+    # Only work around Todo investigate about lazy in model with self reference
     comments_record = await get_all_comment(post_id, db)
     record.comments = comments_record
 
@@ -119,16 +126,30 @@ async def create_post_comment(user_email: str, post_id: int, body: str, parent_i
         parent_id = parent_id
     )
 
-    db.add(new_comment)
+    if parent_id:
+        parent_comment: Comments = await get_single_comment(parent_id, db)
+        parent_comment.children.append(new_comment)
+
+        await db.commit()
+        return True
+    
     await db.commit()
     await db.refresh(new_comment)
 
     return new_comment
 
 async def get_all_comment(post_id: int, db: AsyncSession):
-    stmt = select(Comments).filter(Comments.post == post_id).options(selectinload(Comments.children))
+    # Comments.parent_id == None because we just wanna get parent contain children, not parent and children at the same level
+    stmt = select(Comments).filter(Comments.post == post_id, Comments.parent_id == None).options(selectinload(Comments.children))
     q = await db.execute(stmt)
     record = q.scalars().all()
+
+    return record
+
+async def get_single_comment(comment_id: int, db: AsyncSession):
+    stmt = select(Comments).filter(Comments.id == comment_id)
+    q = await db.execute(stmt)
+    record = q.scalar_one()
 
     return record
 

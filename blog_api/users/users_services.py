@@ -19,6 +19,8 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # config redis client, in order to interact with redis
 redis_client = redis.Redis(host="redis", port=6379, db=0)
+# in order to work without docker, we need to use localhost
+# redis_client = redis.Redis(host="localhost", port=6379, db=0)
 
 def _random_string():
     letters = string.digits
