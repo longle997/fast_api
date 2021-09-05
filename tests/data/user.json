@@ -1,0 +1,32 @@
+[
+  {
+    "email": "ahihi1@mailinator.com",
+    "is_active": true,
+    "posts": [],
+    "posts_like": []
+  },
+  {
+    "email": "ahihi2@mailinator.com",
+    "is_active": true,
+    "posts": [],
+    "posts_like": []
+  },
+  {
+    "email": "ahihi3@mailinator.com",
+    "is_active": true,
+    "posts": [],
+    "posts_like": []
+  },
+  {
+    "email": "ahihi4@mailinator.com",
+    "is_active": true,
+    "posts": [],
+    "posts_like": []
+  },
+  {
+    "email": "ahihi5@mailinator.com",
+    "is_active": true,
+    "posts": [],
+    "posts_like": []
+  }
+]

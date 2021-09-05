@@ -133,8 +133,9 @@ async def create_post_comment(user_email: str, post_id: int, body: str, parent_i
         await db.commit()
         return True
     
+    db.add(new_comment)
     await db.commit()
-    await db.refresh(new_comment)
+    # await db.refresh(new_comment)
 
     return new_comment
 
@@ -152,6 +153,24 @@ async def get_single_comment(comment_id: int, db: AsyncSession):
     record = q.scalar_one()
 
     return record
+
+async def update_comment(comment_id: int, commnent_body: str, db: AsyncSession):
+    record: Comments = await db.get(Comments, comment_id)
+
+    record.body = commnent_body
+
+    await db.commit()
+
+    return record
+
+async def delete_comment(comment_id: int, db: AsyncSession):
+    stmt = delete(Comments).filter(Comments.id == comment_id)
+
+    await db.execute(stmt)
+    await db.commit()
+
+    return True
+
 
 # async def get_post_like(post_id: int, db: AsyncSession):
 #     stmt = (

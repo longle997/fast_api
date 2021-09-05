@@ -17,12 +17,10 @@ from blog_api.helper import CREDENTIAL_EXCEPTION, get_current_user
 from blog_api.schemas import Post, Comments
 from blog_api.exceptions import ItemDoesNotExsit
 
+PREFIX = "/posts"
+TAGS = ["posts api"]
 # Initialize app
-router = APIRouter(
-    prefix="/posts",
-    tags=["posts api"],
-    responses={404: {"description": "User not found"}}
-)
+router = APIRouter()
 
 
 @router.post("")
@@ -118,7 +116,7 @@ async def create_post_like(
     else:
         return f"User with email {current_user.email} was unlike post with id {post_id}!"
 
-@router.post("/{post_id}/comment")
+@router.post("/{post_id}/comment", status_code=201)
 async def create_post_comment(
     post_id: int,
     body: str,
@@ -156,6 +154,61 @@ async def get_all_comments(
 
     return record
 
+@router.patch("/{post_id}/comment/{comment_id}", response_model=Comments)
+async def update_comment(
+    post_id: int,
+    comment_id: int,
+    comment_body: str,
+    current_user: User_db = Depends(get_current_user),
+    db: AsyncSession = Depends(services.get_db)
+):
+    if not current_user:
+        raise CREDENTIAL_EXCEPTION
+
+    post_check = await posts_services.get_post_single(db, post_id)
+    if not post_check:
+        ItemDoesNotExsit(f"Post with ID {post_id} was not found!")
+
+    try:
+        await posts_services.get_single_comment(comment_id, db)
+    except NoResultFound:
+        ItemDoesNotExsit(f"Comment with ID {comment_id} was not found!")
+
+    if not comment_body:
+        raise ValueError("No changes submitted.")
+
+    record = await posts_services.update_comment(comment_id, comment_body, db)
+
+    return record
+
+@router.delete("/{post_id}/comment/{comment_id}", status_code=200)
+async def delete_comment(
+    post_id: int,
+    comment_id: int,
+    current_user: User_db = Depends(get_current_user),
+    db: AsyncSession = Depends(services.get_db)
+):
+    if not current_user:
+        raise CREDENTIAL_EXCEPTION
+
+    post_check = await posts_services.get_post_single(db, post_id)
+    if not post_check:
+        ItemDoesNotExsit(f"Post with ID {post_id} was not found!")
+
+    try:
+        await posts_services.get_single_comment(comment_id, db)
+    except NoResultFound:
+        ItemDoesNotExsit(f"Comment with ID {comment_id} was not found!")
+
+    status = await posts_services.delete_comment(comment_id, db)
+
+    if status:
+        return f"Successfully delete comment with ID = {comment_id}"
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unable to delete comment with ID = {comment_id}"
+        )
 
 # @router.get("/{user_email}/posts/{post_id}/like")
 # async def get_post_like(

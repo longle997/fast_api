@@ -31,6 +31,7 @@ CREDENTIAL_EXCEPTION = HTTPException(
 
 templates = Jinja2Templates(directory="blog_api/static/templates")
 
+
 async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     if not token:
         return None
@@ -51,6 +52,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     return user
 
 
+# this access token doesn't saved anywhere, all data need to validate are inside token itself
+# expire is include inside token and OAuth2PasswordBearer will validate it
 async def create_access_token(data: dict, expire_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     if expire_delta:

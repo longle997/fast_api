@@ -2,13 +2,10 @@ from fastapi import APIRouter, BackgroundTasks
 from blog_api.users.send_email_services import send_email_async, send_email_background
 from fastapi import Response, status
 
+PREFIX = "/send-email"
+TAGS = ["send-email api"]
 # Initialize app
-router = APIRouter(
-    prefix="/send-email",
-    tags=["send-email api"],
-    # dependencies=[Depends(oauth2_scheme)],
-    responses={404: {"description": "User not found"}},
-)
+router = APIRouter()
 
 @router.get('/send-email/asynchronous/{user_email}')
 async def send_email_asynchronous_api(user_email: str):

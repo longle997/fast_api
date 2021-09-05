@@ -30,10 +30,7 @@ def _random_string():
 async def create_user(db:AsyncSession, user:UserCreated, background_task: BackgroundTasks):
     # workaround by adding posts field to User intance, because when response model validate this instance, it will require posts field
     db_user = User(email=user.email, hashed_password=hash_password(user.password), posts=[], posts_like=[])
-    # register the transactions we want it to do, but it doesn’t actually do it
-    db.add(db_user)
-    # commits (persists) those changes to the database. session.commit() always calls for session.flush() as part of it
-    await db.commit()
+    
     random_str = _random_string()
     redis_client.set(user.email, random_str)
     redis_client.expire(user.email, timedelta(minutes=60))
@@ -55,6 +52,11 @@ async def create_user(db:AsyncSession, user:UserCreated, background_task: Backgr
             status_code=400, detail=f"Email {user.email} is invalid, please use another one!"
         )
 
+    # register the transactions we want it to do, but it doesn’t actually do it
+    db.add(db_user)
+    # commits (persists) those changes to the database. session.commit() always calls for session.flush() as part of it
+    await db.commit()
+    
     return db_user
 
 async def get_all_user(db:AsyncSession):

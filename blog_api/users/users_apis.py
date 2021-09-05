@@ -17,15 +17,12 @@ from blog_api.helper import ACCESS_TOKEN_EXPIRE_DAYS, create_access_token, get_c
 from blog_api.models import User as User_db
 from blog_api.users import users_services
 
+PREFIX = "/users"
+TAGS = ["users api"]
 # Initialize app
-router = APIRouter(
-    prefix="/users",
-    tags=["users api"],
-    # dependencies=[Depends(oauth2_scheme)],
-    responses={404: {"description": "User not found"}}
-)
+router = APIRouter()
 
-@router.post("/", response_model=User)
+@router.post("/", response_model=User, status_code=201)
 async def create_user(
     background_task: BackgroundTasks,
     user:UserCreated,
@@ -73,7 +70,8 @@ async def login_for_access_token(
     if not user:
         raise CREDENTIAL_EXCEPTION
 
-    access_token_expire = timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
+    # access_token_expire = timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
+    access_token_expire = timedelta(minutes=1)
     access_token = await create_access_token(
         # The important thing to have in mind is that the sub key should have a unique identifier across the entire application, and it should be a string.
         {"sub": user.email},

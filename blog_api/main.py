@@ -9,6 +9,8 @@ from blog_api.models import User
 from blog_api.users import users_apis, send_email_apis
 from blog_api.posts import posts_apis
 from blog_api.helper import get_current_user, templates, oauth2_scheme
+# from blog_api.posts import posts_apis
+# from blog_api.users import users_apis, send_email_apis
 
 # Initialize app
 app = fastapi.FastAPI(
@@ -22,9 +24,21 @@ app.mount("/static", StaticFiles(directory="blog_api/static"), name="static")
 # asyncio.run(create_db())
 
 # include routers
-app.include_router(users_apis.router)
-app.include_router(posts_apis.router)
-app.include_router(send_email_apis.router)
+app.include_router(
+    users_apis.router,
+    prefix=users_apis.PREFIX,
+    tags=users_apis.TAGS
+)
+app.include_router(
+    posts_apis.router,
+    prefix=posts_apis.PREFIX,
+    tags=posts_apis.TAGS
+)
+app.include_router(
+    send_email_apis.router,
+    prefix=send_email_apis.PREFIX,
+    tags=send_email_apis.TAGS
+)
 
 # HOME page
 @app.get("/home", response_class=HTMLResponse)
