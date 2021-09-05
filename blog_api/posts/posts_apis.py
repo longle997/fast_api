@@ -22,6 +22,10 @@ TAGS = ["posts api"]
 # Initialize app
 router = APIRouter()
 
+async def __validate_post_by_id(db: AsyncSession, post_id: int):
+    post_check = await posts_services.get_post_single(db, post_id)
+    if not post_check:
+        ItemDoesNotExsit(f"Post with ID {post_id} does not exsit!")
 
 @router.post("")
 async def create_post(
@@ -64,7 +68,7 @@ async def update_post(
     db: AsyncSession = Depends(services.get_db)
 ):
 
-    post_record: Post = await posts_services.get_post_single(db, post_id)
+    post_record: Post = await get_post_single(post_id, db)
 
     if post_record.owner_email != current_user.email:
         raise HTTPException(
@@ -83,7 +87,7 @@ async def delete_post(
     current_user: User_db = Depends(get_current_user),
     db: AsyncSession = Depends(services.get_db)
 ):
-    post_record: Post = await posts_services.get_post_single(db, post_id)
+    post_record: Post = await get_post_single(post_id, db)
 
     if post_record.owner_email != current_user.email:
         raise HTTPException(
@@ -109,6 +113,9 @@ async def create_post_like(
 ):
     if not current_user:
         raise CREDENTIAL_EXCEPTION
+    
+        # validate post by id
+    await get_post_single(post_id, db)
 
     status = await posts_services.create_post_like(current_user.id, post_id, db)
     if status:
@@ -125,9 +132,8 @@ async def create_post_comment(
     db: AsyncSession = Depends(services.get_db)
 ):
     
-    post_check = await posts_services.get_post_single(db, post_id)
-    if not post_check:
-        ItemDoesNotExsit(f"Post with ID {post_id} was not found!")
+        # validate post by id
+    await get_post_single(post_id, db)
 
     if not current_user:
         raise CREDENTIAL_EXCEPTION
@@ -165,9 +171,8 @@ async def update_comment(
     if not current_user:
         raise CREDENTIAL_EXCEPTION
 
-    post_check = await posts_services.get_post_single(db, post_id)
-    if not post_check:
-        ItemDoesNotExsit(f"Post with ID {post_id} was not found!")
+    # validate post by id
+    await get_post_single(post_id, db)
 
     try:
         await posts_services.get_single_comment(comment_id, db)
@@ -191,9 +196,8 @@ async def delete_comment(
     if not current_user:
         raise CREDENTIAL_EXCEPTION
 
-    post_check = await posts_services.get_post_single(db, post_id)
-    if not post_check:
-        ItemDoesNotExsit(f"Post with ID {post_id} was not found!")
+    # validate post by id
+    await get_post_single(post_id, db)
 
     try:
         await posts_services.get_single_comment(comment_id, db)
