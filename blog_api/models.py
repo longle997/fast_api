@@ -18,6 +18,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     is_active = Column(Boolean, default=False)
+    role = Column(String, default="user")
 
     # posts_like field is associated with Post model through link_user_post table
     posts_like = orm.relationship("Post", secondary= 'link_user_post')

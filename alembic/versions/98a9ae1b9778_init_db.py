@@ -25,6 +25,7 @@ def upgrade():
         sa.Column('email', sa.String, unique=True, index=True),
         sa.Column('hashed_password', sa.String),
         sa.Column('is_active', sa.Boolean, default=True),
+        sa.Column('role', sa.String, default="user"),
     )
     op.create_table(
         'posts',

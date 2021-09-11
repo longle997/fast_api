@@ -65,7 +65,11 @@ class User(BaseModel):
     email: str
     is_active: Optional[bool] = Field(
         None,
-        title="Actice status of User",
+        title="Active status of User",
+    )
+    role: Optional[str] = Field(
+        None,
+        title="Role of User",
     )
     posts: Optional[List[PostBase]] = Field(
         None,

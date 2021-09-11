@@ -1,6 +1,6 @@
 # We will run this file by uvicorn
 import fastapi
-from fastapi import Request
+from fastapi import Request, Security
 from fastapi.param_functions import Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse
 from blog_api.models import User
 from blog_api.users import users_apis, send_email_apis
 from blog_api.posts import posts_apis
-from blog_api.helper import get_current_user, templates, oauth2_scheme
+from blog_api.helper import get_current_user, templates, test_scope
 # from blog_api.posts import posts_apis
 # from blog_api.users import users_apis, send_email_apis
 
@@ -51,6 +51,11 @@ async def test_template(request: Request, current_user: User = Depends(get_curre
     else:
         return templates.TemplateResponse("home.html", {"request": request, "signedin": signed_in})
 
+@app.post("/test_scopes")
+async def test_scopes(
+    scopes = Security(test_scope, scopes=["me"])
+):
+    return scopes
 '''
 # test add middleware to (app / all functions)
 # this middleware will receive request before target_function

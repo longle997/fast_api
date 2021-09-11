@@ -1,14 +1,12 @@
 # We will run this file by uvicorn
-from starlette.requests import Request
-from blog_api import services
 from typing import List
 from datetime import timedelta
 
-from fastapi import Depends, HTTPException, APIRouter, BackgroundTasks, Form
+from fastapi import Depends, HTTPException, APIRouter, BackgroundTasks, Security
 from fastapi.security import OAuth2PasswordRequestForm
-from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from blog_api import services
 from blog_api.schemas import(
     User,
     UserCreated,
@@ -61,6 +59,7 @@ async def read_user_me(current_user: User_db = Depends(get_current_user)):
 # we are using OAuth2PasswordBearer, token form is {"access_token": access_token, "token_type": "bearer"}
 # access token is contain expire time
 # We only need to create an access token with correct format, jwt tool will handle the rest for us
+# in case we wanna use scopes, we can collect it from OAuth2PasswordRequestForm
 @router.post("/login")
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
@@ -71,11 +70,19 @@ async def login_for_access_token(
         raise CREDENTIAL_EXCEPTION
 
     access_token_expire = timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
-    access_token = await create_access_token(
-        # The important thing to have in mind is that the sub key should have a unique identifier across the entire application, and it should be a string.
-        {"sub": user.email},
-        access_token_expire
-    )
+    if user.role == "admin":
+        access_token = await create_access_token(
+            # The important thing to have in mind is that the sub key should have a unique identifier across the entire application, and it should be a string.
+            # For simplicity, here we are just adding the scopes received directly to the token.
+            # But in your application, for security, you should make sure you only add the scopes that the user is actually able to have, or the ones you have predefined.
+            {"sub": user.email, "scopes": ["admin"]},
+            access_token_expire
+        )
+    else:
+        access_token = await create_access_token(
+            {"sub": user.email, "scopes": ["user"]},
+            access_token_expire
+        )
 
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -109,11 +116,8 @@ async def login_for_access_token(
 
 @router.post("/{user_email}/active/{verify_code}")
 async def active_user(user_email: str, verify_code: str, db: AsyncSession = Depends(services.get_db)):
-    user_check = await users_services.get_single_user(db, user_email)
-    if not user_check:
-        raise HTTPException(
-            status_code=400, detail="User with this infomation does not exist!"
-        )
+
+    users_services.verify_user(user_email, db)
     
     active_check = await users_services.active_user(user_email, verify_code, db)
 
@@ -124,8 +128,14 @@ async def active_user(user_email: str, verify_code: str, db: AsyncSession = Depe
             status_code=400, detail="Verify code is incorrect!"
         )
 
+
 @router.post("/changepass")
-async def change_user_password(password: str, confirm_password: str, db: AsyncSession = Depends(services.get_db), current_user: User_db = Depends(get_current_user)):
+async def change_user_password(
+    password: str,
+    confirm_password: str,
+    db: AsyncSession = Depends(services.get_db),
+    current_user: User_db = Security(get_current_user, scopes=["admin", "user"]),
+):
     if not current_user:
         raise CREDENTIAL_EXCEPTION
 
@@ -143,14 +153,11 @@ async def change_user_password(password: str, confirm_password: str, db: AsyncSe
             status_code=400, detail=f"Unable to change password for user with email {current_user.email}!"
         )
 
+
 @router.post("/{user_email}/forgotpass")
 async def forgot_user_password(background_task: BackgroundTasks, user_email: str, db: AsyncSession = Depends(services.get_db)):
-    user_check = await users_services.get_single_user(db, user_email)
 
-    if not user_check:
-        raise HTTPException(
-            status_code=400, detail="User with this infomation does not exist!"
-        )
+    users_services.verify_user(user_email, db)
     
     status = await users_services.forgot_password(user_email, db, background_task)
 
@@ -159,4 +166,25 @@ async def forgot_user_password(background_task: BackgroundTasks, user_email: str
     else:
         raise HTTPException(
             status_code=400, detail=f"Fail to send new password to email {user_email}"
+        )
+
+
+@router.delete("/{user_email}/delete")
+async def delete_user(
+    user_email: str,
+    current_user: User_db = Security(get_current_user, scopes=["admin"]),
+    db: AsyncSession = Depends(services.get_db)
+):
+    if not current_user:
+        raise CREDENTIAL_EXCEPTION
+    
+    users_services.verify_user(user_email, db)
+
+    status = await users_services.delete_user(user_email, db)
+
+    if status:
+        return f"Successfully delete user with email {user_email}!"
+    else:
+        raise HTTPException(
+            status_code=400, detail=f"Fail to delete user with email {user_email}"
         )
