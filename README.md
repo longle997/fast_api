@@ -10,9 +10,10 @@
   - POSTGRES DB HOST: localhost
 
 <h2>Technologies were used in this application</h2>
-- Python.
-- FastAPI, FastAPI_mail.
-- PostgreSQL, Alembic, SqlAchemy.
-- Redis.
-- Auth2.
-- Docker.
+
+- Python
+- FastAPI, FastAPI_mail
+- PostgreSQL, Alembic, SqlAchemy
+- Redis
+- Auth2
+- Docker
