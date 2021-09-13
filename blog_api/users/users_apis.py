@@ -188,3 +188,18 @@ async def delete_user(
         raise HTTPException(
             status_code=400, detail=f"Fail to delete user with email {user_email}"
         )
+
+@router.post("/{user_mail}/admin_active_user")
+async def admin_active_user(
+    user_email: str,
+    current_user: User_db = Security(get_current_user, scopes=["admin"]),
+    db: AsyncSession = Depends(services.get_db)
+):
+    if not current_user or current_user.role != "admin":
+        raise CREDENTIAL_EXCEPTION
+
+    users_services.verify_user(user_email, db)
+
+    user = await users_services.admin_active_user(user_email, db)
+
+    return user

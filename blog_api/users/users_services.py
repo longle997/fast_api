@@ -165,6 +165,7 @@ async def verify_user(user_email: str, db: AsyncSession):
             status_code=400, detail=f"User with id = {user_email} is not exsit!"
         )
 
+
 async def delete_user(user_email: str, db: AsyncSession):
     stmt = delete(User).filter(User.email == user_email)
 
@@ -174,3 +175,22 @@ async def delete_user(user_email: str, db: AsyncSession):
         return True
     except IntegerError:
         return False
+
+
+async def admin_active_user(user_email: str, db: AsyncSession):
+
+    user = await get_single_user(db, user_email)
+
+    stmt = (
+        update(User).
+        where(User.email == user_email).
+        values(is_active = bool(1 - user.is_active))
+    )
+
+    try:
+        await db.execute(stmt)
+        await db.commit()
+    except IntegerError:
+        return None
+
+    return user

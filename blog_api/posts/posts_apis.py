@@ -1,11 +1,9 @@
 # We will run this file by uvicorn
 from typing import List, Optional
-
-from fastapi import Depends, HTTPException, APIRouter, Security
-from fastapi.security import HTTPBearer
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import HTTP_400_BAD_REQUEST
+from fastapi import Depends, HTTPException, APIRouter, Security, Query
 
 from blog_api.schemas import(
     PostCreate
@@ -14,7 +12,7 @@ from blog_api.models import User as User_db
 from blog_api import services
 from blog_api.users import users_services
 from blog_api.posts import posts_services
-from blog_api.helper import CREDENTIAL_EXCEPTION, get_current_user, test_scope
+from blog_api.helper import CREDENTIAL_EXCEPTION, get_current_user
 from blog_api.schemas import Post, Comments
 from blog_api.exceptions import ItemDoesNotExsit
 
@@ -39,13 +37,38 @@ async def create_post(
     if not current_user:
         raise CREDENTIAL_EXCEPTION
     await users_services.verify_user(current_user.email, db)
-    
+
     return await posts_services.create_post(db, current_user.email, post)
 
 
 @router.get("", response_model=List[Post])
-async def get_all_post(db: AsyncSession = Depends(services.get_db)):
-    return await posts_services.get_all_posts(db)
+async def get_all_post(
+    # size and page is query parameters and need to greater than 0
+    size: Optional[int] = Query(posts_services.DEFAULT_PAGING_SIZE, gt=0, description = "Page size"),
+    page: Optional[int] = Query(posts_services.DEFAULT_PAGING_PAGE_NUMBER, gt=0, description = "Page number"),
+    # seacher params
+    search_field: Optional[str] = Query(None, description="Field need to search"),
+    search_value: Optional[str] = Query(None, description="Value need to search. Example value1 + value2"),
+    operation: Optional[posts_services.OperatorEnum] = Query(
+        posts_services.OperatorEnum.OR, description="Operator was used when seacch multiple field"
+    ),
+    db: AsyncSession = Depends(services.get_db)
+):
+    try:
+        reccords = await posts_services.get_all_posts(
+            db,
+            size,
+            page,
+            search_field,
+            search_value,
+            operation
+        )
+    except ValueError:
+        raise HTTPException(
+            status_code=400, detail="Number of page is out of range, please choose lower number!"
+        )
+
+    return reccords
 
 
 @router.get("/{user_email}/posts/")
@@ -76,7 +99,8 @@ async def update_post(
 
     post_record: Post = await get_post_single(post_id, db)
 
-    if post_record.owner_email != current_user.email:
+    # only owner of comment or admin can update it
+    if post_record.owner_email != current_user.email and current_user.role != "admin":
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
             detail="you are not allow to modify this post!"
@@ -95,10 +119,11 @@ async def delete_post(
 ):
     post_record: Post = await get_post_single(post_id, db)
 
-    if post_record.owner_email != current_user.email:
+    # only owner of comment or admin can delete it
+    if post_record.owner_email != current_user.email and current_user.role != "admin":
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
-            detail="you are not allow to modify this post!"
+            detail="you are not allow to delete this post!"
         )
 
     status = await posts_services.delete_post(current_user.email, post_id, db)
@@ -139,7 +164,7 @@ async def create_post_comment(
     current_user: User_db = Security(get_current_user, scopes=["admin", "user"]),
     db: AsyncSession = Depends(services.get_db)
 ):
-    
+
         # validate post by id
     await get_post_single(post_id, db)
 
@@ -185,7 +210,13 @@ async def update_comment(
     await get_post_single(post_id, db)
 
     try:
-        await posts_services.get_single_comment(comment_id, db)
+        comment = await posts_services.get_single_comment(comment_id, db)
+        # only owner of comment or admin can update it
+        if comment.name != current_user.email and current_user.role != "admin":
+            raise HTTPException(
+                status_code=HTTP_400_BAD_REQUEST,
+                detail="you are not allow to modify this comment!"
+            )
     except NoResultFound:
         ItemDoesNotExsit(f"Comment with ID {comment_id} was not found!")
 
@@ -211,7 +242,13 @@ async def delete_comment(
     await get_post_single(post_id, db)
 
     try:
-        await posts_services.get_single_comment(comment_id, db)
+        comment = await posts_services.get_single_comment(comment_id, db)
+        # only owner of comment or admin can delete it
+        if comment.name != current_user.email and current_user.role != "admin":
+            raise HTTPException(
+                status_code=HTTP_400_BAD_REQUEST,
+                detail="you are not allow to delete this comment!"
+            )
     except NoResultFound:
         ItemDoesNotExsit(f"Comment with ID {comment_id} was not found!")
 
