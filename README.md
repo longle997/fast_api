@@ -25,7 +25,7 @@
 
 - Post:
   - Create post.
-  - Get all post information, get single post information.
+  - Get all post information (paging, seaching), get single post information.
   - Delete post, update post.
   - Create post like.
   - Create, get, update, delete post comment.
