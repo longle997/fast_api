@@ -9,6 +9,28 @@
   - POSTGRES DB PORT: 5433
   - POSTGRES DB HOST: localhost
 
+<h2>Features of this application</h2>
+
+- User:
+  - Create user (email verification).
+  - Get all user information, get single user information.
+  - Login by email and password.
+  - Change password, forgot password for user.
+
+
+- Admin:
+  - Activating user.
+  - Delete user.
+
+
+- Post:
+  - Create post.
+  - Get all post information (paging, seaching), get single post information.
+  - Delete post, update post.
+  - Create post like.
+  - Create, get, update, delete post comment.
+
+
 <h2>Technologies were used in this application</h2>
 
 - Python
