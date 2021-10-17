@@ -19,7 +19,7 @@ depends_on = None
 
 
 def upgrade():
-    op.create_table(
+    user_table = op.create_table(
         'users',
         sa.Column('id', sa.Integer, primary_key=True, index=True),
         sa.Column('email', sa.String, unique=True, index=True),
@@ -51,6 +51,17 @@ def upgrade():
         sa.Column('body', sa.String),
         sa.Column('date_created', sa.DateTime, default=datetime.now()),
         sa.Column('parent_id', sa.Integer, ForeignKey('comments.id')),
+    )
+    op.bulk_insert(user_table,
+        [
+            {
+                'id': 0,
+                'email': 'Admin@company.com',
+                'hashed_password': '$2b$12$o7KXV0ltCWEvYaukPFcqo.xQXM2zMD7nowBSQfw466hwNzBz5685q',
+                'is_active': True,
+                'role': 'admin'
+            }
+        ]
     )
 
 

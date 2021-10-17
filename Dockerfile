@@ -9,3 +9,8 @@ WORKDIR /blog_api_container/
 RUN pip install -r blog_api/requirements.txt
 
 ENV PYTHONPATH=`pwd`
+ENV MAIL_FROM="your_gmail@gmail.com"
+ENV MAIL_PASSWORD="your_gmail_password"
+ENV MAIL_PORT="587"
+ENV MAIL_SERVER="smtp.gmail.com"
+ENV MAIL_FROM_NAME="Email notification for user"

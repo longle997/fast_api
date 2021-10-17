@@ -60,6 +60,7 @@ async def searcher(
         # so we can use ilike method, which will make our sql statement search for approximate value
         # in this case "model.search_field" will search with approximate value "item"
         # example lower(CAST(posts.title AS VARCHAR)) LIKE lower(:param_1)
+        # https://www.kite.com/python/docs/sqlalchemy.sql.operators.ColumnOperators.ilike
         filters.append(attr.ilike(f"%{item}%"))
 
     if operation == OperatorEnum.OR:
