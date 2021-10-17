@@ -6,12 +6,15 @@
   - Open Dockerfile
   - Change value MAIL_FROM variable to your gmail. For example "yourgmail@gmail.com"
   - Change value MAIL_PASSWORD variable to your gmail password. For example "yourgmailpassword"
-- Step 4: In order to view data from Database, use PgAdmin and access to DB by following information:
+- Step 4: In order to view data from PostgreSQL Database, use PgAdmin and access to DB by following information:
   - POSTGRES PASSWORD: password
   - POSTGRES USER: postgres
   - POSTGRES DB: test
   - POSTGRES DB PORT: 5433
   - POSTGRES DB HOST: localhost
+- Step 5: In order to view data from Redis database, follow below step:
+  - Install Redis from this tutorial: arubacloud.com/tutorial/how-to-install-and-configure-redis-on-ubuntu-20-04.aspx
+  - Type command "redis-cli -p 6380" to application's redis database.
 
 <h2>Features of this application</h2>
 
