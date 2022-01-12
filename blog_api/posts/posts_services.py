@@ -63,11 +63,13 @@ async def searcher(
         # https://www.kite.com/python/docs/sqlalchemy.sql.operators.ColumnOperators.ilike
         filters.append(attr.ilike(f"%{item}%"))
 
+
     if operation == OperatorEnum.OR:
         # add or between sql expression
         filter_expression = or_(*filters)
     else:
         filter_expression = and_(*filters)
+    
 
     base_query = base_query.filter(filter_expression)
 
@@ -81,7 +83,7 @@ async def create_post(db: AsyncSession, user_email: str, post: PostCreate):
     # commit the changes to the database (so that they are saved).
     await db.commit()
     # refresh your instance (so that it contains any new data from the database, like the generated ID).
-    db.refresh(db_post)
+    await db.refresh(db_post)
     return db_post
 
 
@@ -117,6 +119,12 @@ async def get_all_posts(
         operation
     )
 
+    # processing pagination for get all post api
+    if size:
+        stmt = stmt.limit(size)
+    if page:
+        stmt = stmt.offset(size * (page - 1))
+
     records = await db.execute(stmt)
     records = records.scalars().all()
     if not records:
@@ -126,7 +134,8 @@ async def get_all_posts(
         comments_record = await get_all_comment(record.id, db)
         record.comments = comments_record
 
-    # processing pagination for get all post api
+    '''
+    OlD WAY TO processing pagination for get all post api
     if len(records) < size and page > 1:
         raise ValueError("Number of page is out of range, please choose lower number!")
     else:
@@ -142,6 +151,9 @@ async def get_all_posts(
         paging_records = paging_records[page-1]
 
     return paging_records
+    '''
+
+    return records
 
 
 async def get_post_single(db: AsyncSession, post_id: int):

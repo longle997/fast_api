@@ -18,9 +18,9 @@ from blog_api.users.send_email_services import send_email_background
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # config redis client, in order to interact with redis
-# redis_client = redis.Redis(host="redis", port=6379, db=0)
+redis_client = redis.Redis(host="redis", port=6379, db=0)
 # in order to work without docker, we need to use localhost
-redis_client = redis.Redis(host="localhost", port=6379, db=0)
+# redis_client = redis.Redis(host="localhost", port=6379, db=0)
 
 def _random_string():
     letters = string.digits
@@ -43,8 +43,7 @@ async def create_user(db:AsyncSession, user:UserCreated, background_task: Backgr
             {
                 'title': "Verifycation Account Email!", 
                 'code': f'{random_str}',
-                'message': 'Verification code only valid for 5 minutes, so let\'s hurry up!',
-                'password': None
+                'message': 'Verification code only valid for 5 minutes, so let\'s hurry up!'
             }
         )
     except ValidationError:
