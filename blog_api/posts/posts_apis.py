@@ -126,7 +126,9 @@ async def delete_post(
             detail="you are not allow to delete this post!"
         )
 
-    status = await posts_services.delete_post(current_user.email, post_id, db)
+    user = await users_services.get_single_user(db, current_user.email)
+
+    status = await posts_services.delete_post(user.id, post_id, db)
 
     if status:
         return f"Delete Post with id {post_id} successfully!"

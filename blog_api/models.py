@@ -32,7 +32,7 @@ class Post(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
     content = Column(String, index=True)
-    owner_email = Column(String, ForeignKey("users.email"))
+    owner_email = Column(String, ForeignKey("users.email", ondelete='CASCADE'))
     date_created = Column(DateTime, default=datetime.utcnow())
     date_last_update = Column(DateTime, default=datetime.utcnow())
 
@@ -52,7 +52,7 @@ class Link_User_Post(Base):
 class Comments(Base):
     __tablename__ = "comments"
     id = Column(Integer, primary_key=True)
-    post = Column(Integer, ForeignKey("posts.id"))
+    post = Column(Integer, ForeignKey("posts.id", ondelete='CASCADE'))
     name = Column(String)
     body = Column(String)
     date_created = Column(DateTime, default=datetime.utcnow())

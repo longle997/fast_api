@@ -36,21 +36,21 @@ def upgrade():
         sa.Column('date_last_update', sa.DateTime, default=datetime.now()),
     )
     op.add_column('posts',
-        sa.Column('owner_email', sa.String, ForeignKey('users.email'))
+        sa.Column('owner_email', sa.String, ForeignKey('users.email', ondelete='CASCADE'))
     )
     op.create_table(
         'link_user_post',
-        sa.Column('user_id', sa.Integer, ForeignKey('users.id'), primary_key=True),
-        sa.Column('post_id', sa.Integer, ForeignKey('posts.id'), primary_key=True)
+        sa.Column('user_id', sa.Integer, ForeignKey('users.id', ondelete='CASCADE'), primary_key=True),
+        sa.Column('post_id', sa.Integer, ForeignKey('posts.id', ondelete='CASCADE'), primary_key=True)
     )
     op.create_table(
         'comments',
         sa.Column('id', sa.Integer, primary_key=True, index=True),
-        sa.Column('post', sa.Integer, ForeignKey('posts.id')),
+        sa.Column('post', sa.Integer, ForeignKey('posts.id', ondelete='CASCADE')),
         sa.Column('name', sa.String, index=True),
         sa.Column('body', sa.String),
         sa.Column('date_created', sa.DateTime, default=datetime.now()),
-        sa.Column('parent_id', sa.Integer, ForeignKey('comments.id')),
+        sa.Column('parent_id', sa.Integer, ForeignKey('comments.id', ondelete='CASCADE')),
     )
     op.bulk_insert(user_table,
         [

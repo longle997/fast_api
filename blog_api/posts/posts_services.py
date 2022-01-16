@@ -189,7 +189,14 @@ async def update_post(post_id: int, post_data: PostCreate, db: AsyncSession):
     return post_record
 
 
-async def delete_post(post_id: int, db: AsyncSession):
+async def delete_post(user_id: int, post_id: int, db: AsyncSession):
+    stmt = (
+        delete(Link_User_Post)
+        .where(Link_User_Post.post_id == post_id)
+        .where(Link_User_Post.user_id == user_id)
+    )
+    await db.execute(stmt)
+
     stmt = (
         delete(Post)
         .where(Post.id == post_id)
@@ -229,6 +236,9 @@ async def create_post_comment(user_email: str, post_id: int, body: str, parent_i
 
     if parent_id:
         parent_comment: Comments = await get_single_comment(parent_id, db)
+        if parent_comment.parent_id:
+            return False
+
         parent_comment.children.append(new_comment)
 
         await db.commit()
@@ -251,7 +261,7 @@ async def get_all_comment(post_id: int, db: AsyncSession):
 
 
 async def get_single_comment(comment_id: int, db: AsyncSession):
-    stmt = select(Comments).filter(Comments.id == comment_id)
+    stmt = select(Comments).filter(Comments.id == comment_id).options(selectinload(Comments.children))
     q = await db.execute(stmt)
     record = q.scalar_one()
 
@@ -269,6 +279,12 @@ async def update_comment(comment_id: int, commnent_body: str, db: AsyncSession):
 
 
 async def delete_comment(comment_id: int, db: AsyncSession):
+    comments = await get_single_comment(comment_id, db)
+    comment_childrens = comments.children
+    for comment in comment_childrens:
+        stmt = delete(Comments).filter(Comments.id == comment.id)
+        await db.execute(stmt)
+
     stmt = delete(Comments).filter(Comments.id == comment_id)
 
     await db.execute(stmt)

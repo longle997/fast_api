@@ -45,6 +45,10 @@ async def get_all_user(db:AsyncSession = Depends(services.get_db)):
 @router.get("/{user_email}/", response_model=User)
 async def get_single_user(user_email:str, db:AsyncSession = Depends(services.get_db)):
     record = await users_services.get_single_user(db, user_email)
+    if not record:
+        raise HTTPException(
+            status_code=404, detail="User not found!"
+        )
     return record
 
 
